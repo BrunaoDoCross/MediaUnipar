@@ -17,7 +17,7 @@ def main():
     driver.find_element(By.XPATH, '//*[@id="curso"]').send_keys(Keys.RETURN)
     driver.get("https://aluno.unipar.br/site/home.php?conteudo=notas&acao=extrato_notas_fun")
     driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/form/div/div[2]/input').click()
-
+    
     analise1 = float(driver.find_element(By.XPATH, '//*[@id="extrato_notas"]/tbody/tr[4]/td[5]/span').text.replace(',', '.'))
     analise2 = float(driver.find_element(By.XPATH, '//*[@id="extrato_notas"]/tbody/tr[4]/td[6]/span').text.replace(',', '.'))
     mediaAnalise = (analise1+analise2)/2
@@ -60,7 +60,7 @@ def main():
     worksheet.write("E1", "RELAÇÃO", bold)
     
     
-    worksheet.write("D2", mediaAnalise) 
+    worksheet.write("D2", mediaAnalise)
     worksheet.write("A2", "Análise e Projeto de Sistemas")
     worksheet.write("B2", analise1)
     worksheet.write("C2", analise2)
