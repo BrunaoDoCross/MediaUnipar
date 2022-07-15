@@ -6,6 +6,12 @@ import xlsxwriter
 import decimal
 
 def main():
+    
+    #Deixa a aplicação invisível
+    options = uc.ChromeOptions()
+    options.headless = True
+
+    #Cria arquivo xlsx com as linhas e colunas
     workbook = xlsxwriter.Workbook("MédiaUnipar.xlsx")
     worksheet = workbook.add_worksheet(name="Médias")
     bold = workbook.add_format({'bold': True})
@@ -15,20 +21,27 @@ def main():
     worksheet.write("D1", "MÉDIA", bold) 
     worksheet.write("E1", "RELAÇÃO", bold)
     cont = 0
+    
+    #Lê o login e a senha do usuário
     quantidadeDeMaterias = int(input("Digite quantas matérias você tem: "))
     login = input("Digite o seu RA: ")
     senha = pwinput.pwinput(prompt='Digite sua senha: ', mask= '*')
-    driver = uc.Chrome()
+    
+    #Navega até o WebSite da unipar
+    driver = uc.Chrome(options)  
     driver.get("https://aluno.unipar.br/index.html")
+    
+    #Entra com login e senha e entra na aba de notas
     driver.find_element(By.NAME, "login").send_keys(login)
     driver.find_element(By.NAME, "senha").send_keys(senha, Keys.RETURN)
     driver.find_element(By.XPATH, '//*[@id="curso"]').click()
     driver.find_element(By.XPATH, '//*[@id="curso"]').send_keys(Keys.RETURN)
     driver.get("https://aluno.unipar.br/site/home.php?conteudo=notas&acao=extrato_notas_fun")
     driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/form/div/div[2]/input').click()
+    
+    #Lê todas as notas e disciplinas, calcula a média entre elas e armazena em uma lista
     lista = []
     i = 0
-    
     while i<quantidadeDeMaterias:
         disciplina = []
         nome = str(((driver.find_element(By.XPATH, f'//*[@id="extrato_notas"]/tbody/tr[{i+4}]').find_element(By.ID, 'disciplina')).text))
@@ -42,6 +55,7 @@ def main():
         lista.append(disciplina)
         i+=1       
 
+    #Função para eliminar os algarismos '0' inúteis dos números
     def formatar(num):
         try:
             dec = decimal.Decimal(num)
@@ -62,6 +76,7 @@ def main():
             return '-' + val
         return val
     
+    #Função que ompleta o arquivo xlsx com um loop e mostra a porcentagem de aumento de uma nota em relação a outra com um if
     def montaXls(nome, n1, n2, media, x):
         worksheet.write(f'A{x+2}', nome)
         worksheet.write(f'B{x+2}', formatar(n1))
@@ -74,11 +89,14 @@ def main():
         else:
             return worksheet.write(f'E{x+2}', f'Diminuição de {formatar((n1-n2)*10)}%')   
     
+    #Chama a função de montar o xlsx para cada disciplina na presente na lista
     for disciplina in lista:
         montaXls(disciplina[0], disciplina[1], disciplina[2], disciplina[3], cont)
         cont+=1
     
+    #Fecha o xlwx e o Chrome Driver
     workbook.close()
+    driver.quit()
     
 if __name__ == '__main__':
     main()
