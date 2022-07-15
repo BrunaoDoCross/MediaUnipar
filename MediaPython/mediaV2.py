@@ -4,13 +4,19 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 import xlsxwriter
 import decimal
+from termcolor import colored
+import os
 
 def main():
-    
+    print("\x1b[2J\x1b[1;1H")
+    print(colored("\nDeixando Aplicação invisível...", "white", attrs=['bold']))
     #Deixa a aplicação invisível
     options = uc.ChromeOptions()
     options.headless = True
-
+    driver = uc.Chrome(options)
+    print(colored("Feito...", "green", attrs=['bold']))
+    
+    print(colored("\nCriando xlsx...", "white", attrs=['bold']))    
     #Cria arquivo xlsx com as linhas e colunas
     workbook = xlsxwriter.Workbook("MédiaUnipar.xlsx")
     worksheet = workbook.add_worksheet(name="Médias")
@@ -20,28 +26,35 @@ def main():
     worksheet.write("C1", "NOTA 2° BI", bold)
     worksheet.write("D1", "MÉDIA", bold) 
     worksheet.write("E1", "RELAÇÃO", bold)
+    print(colored("Feito...", "green", attrs=['bold']))
     cont = 0
     
+    print(colored("\nLendo dados do usuário...", "white", attrs=['bold'])) 
     #Lê o login e a senha do usuário
     quantidadeDeMaterias = int(input("Digite quantas matérias você tem: "))
     login = input("Digite o seu RA: ")
     senha = pwinput.pwinput(prompt='Digite sua senha: ', mask= '*')
-    
-    #Navega até o WebSite da unipar
-    driver = uc.Chrome(options)  
-    driver.get("https://aluno.unipar.br/index.html")
+    print(colored("Feito...", "green", attrs=['bold']))
     
     #Entra com login e senha e entra na aba de notas
+    print(colored("\nEntrando no site da unipar...", "white", attrs=['bold'])) 
+    driver.get("https://aluno.unipar.br/index.html")
+    print(colored("Feito...", "green", attrs=['bold']))
+    print(colored("\nFazendo login...", "white", attrs=['bold']))
     driver.find_element(By.NAME, "login").send_keys(login)
     driver.find_element(By.NAME, "senha").send_keys(senha, Keys.RETURN)
+    print(colored("Feito...", "green", attrs=['bold']))
+    print(colored("\nNavegando até a aba de notas...", "white", attrs=['bold']))
     driver.find_element(By.XPATH, '//*[@id="curso"]').click()
     driver.find_element(By.XPATH, '//*[@id="curso"]').send_keys(Keys.RETURN)
     driver.get("https://aluno.unipar.br/site/home.php?conteudo=notas&acao=extrato_notas_fun")
     driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/form/div/div[2]/input').click()
-    
+    print(colored("Feito...", "green", attrs=['bold']))
     #Lê todas as notas e disciplinas, calcula a média entre elas e armazena em uma lista
     lista = []
     i = 0
+    
+    print(colored(f"Lendo disciplinas e fazendo calculos...", "white", attrs=['bold']))
     while i<quantidadeDeMaterias:
         disciplina = []
         nome = str(((driver.find_element(By.XPATH, f'//*[@id="extrato_notas"]/tbody/tr[{i+4}]').find_element(By.ID, 'disciplina')).text))
@@ -53,7 +66,8 @@ def main():
         media = ((nota1 + nota2)/2)
         disciplina.append(media)
         lista.append(disciplina)
-        i+=1       
+        print(colored(f"Disciplina {i+1} Lida!", "green", attrs=['bold']))
+        i+=1
 
     #Função para eliminar os algarismos '0' inúteis dos números
     def formatar(num):
@@ -76,7 +90,7 @@ def main():
             return '-' + val
         return val
     
-    #Função que ompleta o arquivo xlsx com um loop e mostra a porcentagem de aumento de uma nota em relação a outra com um if
+    #Função que completa o arquivo xlsx com notas utilizando um loop e mostra a porcentagem de aumento de uma nota em relação a outra com um if
     def montaXls(nome, n1, n2, media, x):
         worksheet.write(f'A{x+2}', nome)
         worksheet.write(f'B{x+2}', formatar(n1))
@@ -90,13 +104,17 @@ def main():
             return worksheet.write(f'E{x+2}', f'Diminuição de {formatar((n1-n2)*10)}%')   
     
     #Chama a função de montar o xlsx para cada disciplina na presente na lista
+    print(colored("\nAdicionando as disciplinas lidas no arquivo xlsx", "white", attrs=['bold']))
     for disciplina in lista:
         montaXls(disciplina[0], disciplina[1], disciplina[2], disciplina[3], cont)
+        print(colored(f"Disciplina {cont+1} adicionada!", "green", attrs=['bold']))
         cont+=1
+    
     
     #Fecha o xlwx e o Chrome Driver
     workbook.close()
     driver.quit()
+    print(colored("\n\nPrograma concluido!!!", color='green', attrs=['bold', 'underline']))
     
 if __name__ == '__main__':
     main()
